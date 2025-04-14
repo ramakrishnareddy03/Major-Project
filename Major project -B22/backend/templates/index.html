@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hard Landing Prediction</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: bisque;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+        }
+        .landing {
+            display: flex;
+            background-image: url('/static/images/image.jpg'); /* Add your image URL here */
+            background-size: cover; /* Makes the image cover the entire background */
+            background-position: center; /* Centers the image */
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: white;
+        }
+        .landing button {
+            padding: 15px 30px;
+            font-size: 20px;
+            background: dimgray;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .container {
+            display: none;
+            width: 80%;
+            margin: auto;
+            padding: 20px;
+            background-color: beige;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .nav-buttons button {
+            padding: 10px 15px;
+            background: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .tab-content {
+            display: none;
+        }
+        .input-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 10px;
+}
+
+.input-group label {
+    font-size: 16px;
+    margin-bottom: 5px;
+}
+
+.input-group input {
+    width: 200px;  /* Adjusted width */
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    text-align: center;
+    font-size: 14px;
+}
+
+        button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            background: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="landing" id="landing-page">
+        <h1>Hard Landing Prediction System</h1>
+        <button onclick="enterApp()">Enter</button>
+    </div>
+
+    <div class="container" id="app-content">
+        <div class="nav-buttons">
+            <button onclick="showTab('prediction')">Prediction</button>
+            <button onclick="showTab('metrics'); fetchMetrics()">Metrics</button>
+            <button onclick="showTab('graphs'); fetchMetrics()">Graphs</button>
+        </div>
+
+        <div id="prediction" class="tab-content">
+            <h2>Enter Flight Data</h2>
+            <div id="input-form">
+                <div class="input-group">
+                    <label>Altitude:</label>
+                    <input type="number" id="altitude">
+                </div>
+                <div class="input-group">
+                    <label>Vertical Speed:</label>
+                    <input type="number" id="vertical_speed">
+                </div>
+                <div class="input-group">
+                    <label>Rate of Descent:</label>
+                    <input type="number" id="rate_of_descent">
+                </div>
+                <div class="input-group">
+                    <label>Flap Deployment:</label>
+                    <input type="number" id="flap_deployment">
+                </div>
+                <div class="input-group">
+                    <label>Spoiler Deployment:</label>
+                    <input type="number" id="spoiler_deployment">
+                </div>
+                <div class="input-group">
+                    <label>Brake Input:</label>
+                    <input type="number" id="brake_input">
+                </div>
+                <div class="input-group">
+                    <label>Pitch Variability:</label>
+                    <input type="number" id="pitch_variability">
+                </div>
+                <div class="input-group">
+                    <label>Roll Angle Variability:</label>
+                    <input type="number" id="roll_angle_variability">
+                </div>
+                <button onclick="predictLanding()">Predict</button>
+                <p id="prediction-result"></p>
+            </div>
+        </div>
+
+        <div id="metrics" class="tab-content">
+            <h2>Model Metrics</h2>
+            <p id="accuracy"></p>
+            <pre id="classification-report"></pre>
+        </div>
+
+        <div id="graphs" class="tab-content">
+            <h2>Confusion Matrix</h2>
+            <img id="confusion-matrix" src="">
+            <h2>ROC Curve</h2>
+            <img id="roc-curve" src="">
+        </div>
+    </div>
+
+    <script>
+        function enterApp() {
+            document.getElementById("landing-page").style.display = "none";
+            document.getElementById("app-content").style.display = "block";
+        }
+
+        function showTab(tab) {
+            document.querySelectorAll(".tab-content").forEach(el => el.style.display = "none");
+            document.getElementById(tab).style.display = "block";
+        }
+
+        function predictLanding() {
+            const data = {
+                altitude: document.getElementById("altitude").value,
+                vertical_speed: document.getElementById("vertical_speed").value,
+                rate_of_descent: document.getElementById("rate_of_descent").value,
+                flap_deployment: document.getElementById("flap_deployment").value,
+                spoiler_deployment: document.getElementById("spoiler_deployment").value,
+                brake_input: document.getElementById("brake_input").value,
+                pitch_variability: document.getElementById("pitch_variability").value,
+                roll_angle_variability: document.getElementById("roll_angle_variability").value
+            };
+            fetch('/predict', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("prediction-result").innerText = "Prediction: " + data.prediction;
+            });
+        }
+
+        function fetchMetrics() {
+            fetch('/metrics')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("accuracy").innerText = "Accuracy: " + data.accuracy;
+                document.getElementById("confusion-matrix").src = "data:image/png;base64," + data.confusion_matrix;
+                document.getElementById("roc-curve").src = "data:image/png;base64," + data.roc_curve;
+            });
+        }
+    </script>
+</body>
+</html>
